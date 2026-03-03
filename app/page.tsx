@@ -2,16 +2,31 @@
 
 import { useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { HeroSection } from "@/components/hero-section";
 import { TypingTestSection, type TypingStats } from "@/components/typing-test-section";
 import { ResultModal } from "@/components/result-modal";
+import { saveScoreApi } from "@/lib/api/leaderboard";
 
 export default function HomePage() {
   const { status } = useSession();
+  const queryClient = useQueryClient();
   const [showTest, setShowTest] = useState(false);
   const [resultStats, setResultStats] = useState<TypingStats | null>(null);
   const [resultModalOpen, setResultModalOpen] = useState(false);
   const [testKey, setTestKey] = useState(0);
+
+  const handleSaveScore = useCallback(async (stats: TypingStats) => {
+    await saveScoreApi({
+      wpm: stats.wpm,
+      accuracy: stats.accuracy,
+      correctChars: stats.correctChars,
+      wrongChars: stats.wrongChars,
+      totalChars: stats.totalChars,
+      durationSeconds: stats.durationSeconds,
+    });
+    queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
+  }, [queryClient]);
 
   const handleStartTyping = useCallback(() => {
     setShowTest(true);
@@ -61,6 +76,7 @@ export default function HomePage() {
         onClose={handleTryAgain}
         stats={resultStats}
         isLoggedIn={status === "authenticated"}
+        onSaveScore={handleSaveScore}
       />
     </div>
   );

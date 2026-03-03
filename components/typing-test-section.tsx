@@ -12,6 +12,7 @@ export interface TypingStats {
   correctChars: number;
   wrongChars: number;
   totalChars: number;
+  durationSeconds?: number;
 }
 
 interface TypingTestSectionProps {
@@ -71,8 +72,8 @@ export function TypingTestSection({ onComplete, onReset }: TypingTestSectionProp
     setStarted(false);
     const elapsedSec = startTime != null ? (Date.now() - startTime) / 1000 : 0;
     const stats = computeStats(paragraph, inputValueRef.current, elapsedSec);
-    onComplete(stats);
-  }, [paragraph, startTime, onComplete]);
+    onComplete({ ...stats, durationSeconds: duration });
+  }, [paragraph, startTime, duration, onComplete]);
 
   useEffect(() => {
     if (!started || startTime == null) return;

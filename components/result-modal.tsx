@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -8,6 +9,7 @@ import {
   ModalFooter,
 } from "@heroui/modal";
 import { Button } from "@heroui/button";
+import { Spinner } from "@heroui/spinner";
 import type { TypingStats } from "./typing-test-section";
 
 interface ResultModalProps {
@@ -15,6 +17,7 @@ interface ResultModalProps {
   onClose: () => void;
   stats: TypingStats | null;
   isLoggedIn?: boolean;
+  onSaveScore?: (stats: TypingStats) => Promise<void>;
 }
 
 export function ResultModal({
@@ -22,13 +25,30 @@ export function ResultModal({
   onClose,
   stats,
   isLoggedIn = false,
+  onSaveScore,
 }: ResultModalProps) {
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    if (!stats || !onSaveScore || saving || saved) return;
+    setSaving(true);
+    try {
+      await onSaveScore(stats);
+      setSaved(true);
+    } catch {
+      // Error could be shown via toast
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (!stats) return null;
 
   return (
     <Modal
       isOpen={isOpen}
-      onOpenChange={(open) => {
+      onOpenChange={(open: boolean) => {
         if (!open) onClose();
       }}
       onClose={onClose}
@@ -62,9 +82,15 @@ export function ResultModal({
           </div>
         </ModalBody>
         <ModalFooter>
-          {isLoggedIn && (
-            <Button color="primary" variant="flat">
-              Save score
+          {isLoggedIn && onSaveScore && (
+            <Button
+              color="primary"
+              variant="flat"
+              onPress={handleSave}
+              isDisabled={saving || saved}
+              startContent={saving ? <Spinner size="sm" /> : null}
+            >
+              {saved ? "Saved!" : saving ? "Saving…" : "Save score"}
             </Button>
           )}
           <Button color="primary" onPress={onClose}>
