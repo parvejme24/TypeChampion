@@ -1,4 +1,7 @@
 declare module "next-auth" {
+  // Allow authOptions to be used with getServerSession (next-auth/next)
+  export type NextAuthOptions = Record<string, unknown>;
+
   interface Session {
     user?: {
       name?: string | null;
@@ -18,6 +21,7 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
   interface JWT {
+    email?: string;
     dbUser?: {
       fullName: string;
       email: string;

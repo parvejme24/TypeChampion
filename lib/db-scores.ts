@@ -2,7 +2,7 @@ import prisma from "./prisma";
 
 export interface DbScore {
   id: number;
-  userEmail: string;
+  userEmail: string | null;
   userName: string;
   wpm: number;
   accuracy: number;
@@ -10,6 +10,10 @@ export interface DbScore {
   wrongChars: number;
   totalChars: number;
   durationSeconds?: number;
+  paragraphId?: number;
+  paragraphTitle?: string | null;
+  paragraphText?: string | null;
+  typedText?: string | null;
   createdAt: Date;
 }
 
@@ -21,6 +25,10 @@ export async function addScore(
     wrongChars: number;
     totalChars: number;
     durationSeconds?: number;
+    paragraphId?: number;
+    paragraphTitle?: string;
+    paragraphText?: string;
+    typedText?: string;
   },
   userEmail: string,
   userName: string
@@ -35,6 +43,10 @@ export async function addScore(
       wrongChars: input.wrongChars,
       totalChars: input.totalChars,
       durationSeconds: input.durationSeconds ?? null,
+      paragraphId: input.paragraphId ?? null,
+      paragraphTitle: input.paragraphTitle ?? null,
+      paragraphText: input.paragraphText ?? null,
+      typedText: input.typedText ?? null,
     },
   });
 
@@ -48,6 +60,10 @@ export async function addScore(
     wrongChars: score.wrongChars,
     totalChars: score.totalChars,
     durationSeconds: score.durationSeconds ?? undefined,
+    paragraphId: score.paragraphId ?? undefined,
+    paragraphTitle: score.paragraphTitle ?? undefined,
+    paragraphText: score.paragraphText ?? undefined,
+    typedText: score.typedText ?? undefined,
     createdAt: score.createdAt,
   };
 }
@@ -125,4 +141,27 @@ export async function getLeaderboard(
   );
 
   return detailed.filter((s): s is DbScore => s !== null);
+}
+
+export async function getScoresByUserEmail(userEmail: string): Promise<DbScore[]> {
+  const scores = await prisma.score.findMany({
+    where: { userEmail },
+    orderBy: { createdAt: "desc" },
+  });
+  return scores.map((s) => ({
+    id: s.id,
+    userEmail: s.userEmail,
+    userName: s.userName,
+    wpm: s.wpm,
+    accuracy: s.accuracy,
+    correctChars: s.correctChars,
+    wrongChars: s.wrongChars,
+    totalChars: s.totalChars,
+    durationSeconds: s.durationSeconds ?? undefined,
+    paragraphId: s.paragraphId ?? undefined,
+    paragraphTitle: s.paragraphTitle ?? undefined,
+    paragraphText: s.paragraphText ?? undefined,
+    typedText: s.typedText ?? undefined,
+    createdAt: s.createdAt,
+  }));
 }

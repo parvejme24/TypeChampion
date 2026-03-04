@@ -13,6 +13,7 @@ import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
 import { link as linkStyles } from "@heroui/theme";
 import NextLink from "next/link";
+import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { useSession, signOut } from "next-auth/react";
 import { Avatar } from "@heroui/avatar";
@@ -27,6 +28,7 @@ import { siteConfig } from "@/config/site";
 import { Logo } from "@/components/icons";
 
 export const Navbar = () => {
+  const pathname = usePathname();
   const { data: session, status } = useSession();
   const user = session?.user;
   const isAuthenticated = status === "authenticated" && !!user;
@@ -42,20 +44,24 @@ export const Navbar = () => {
           </NextLink>
         </NavbarBrand>
         <ul className="hidden lg:flex gap-4 justify-start ml-2">
-          {siteConfig.navItems.map((item) => (
-            <NavbarItem key={item.href}>
-              <NextLink
-                className={clsx(
-                  linkStyles({ color: "foreground" }),
-                  "data-[active=true]:text-primary data-[active=true]:font-medium",
-                )}
-                color="foreground"
-                href={item.href}
-              >
-                {item.label}
-              </NextLink>
-            </NavbarItem>
-          ))}
+          {siteConfig.navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <NavbarItem key={item.href}>
+                <NextLink
+                  className={clsx(
+                    linkStyles({ color: "foreground" }),
+                    "data-[active=true]:font-medium",
+                    isActive && "underline underline-offset-4 decoration-2",
+                  )}
+                  color="foreground"
+                  href={item.href}
+                >
+                  {item.label}
+                </NextLink>
+              </NavbarItem>
+            );
+          })}
         </ul>
       </NavbarContent>
 
@@ -85,23 +91,22 @@ export const Navbar = () => {
               >
                 <DropdownItem
                   key="user-info"
-                  className="h-14 gap-1"
+                  className="h-14 gap-1 flex flex-col items-center justify-center text-center"
                   isReadOnly
                   textValue={user?.email ?? "Signed in user"}
                 >
-                  <p className="text-xs text-default-500">Signed in as</p>
                   {user?.name && (
-                    <p className="text-sm font-medium truncate">{user.name}</p>
+                    <p className="text-sm font-medium truncate w-full">{user.name}</p>
                   )}
-                  <p className="text-xs text-default-500 truncate">
+                  <p className="text-xs text-default-500 truncate w-full">
                     {user?.email}
                   </p>
                 </DropdownItem>
                 <DropdownItem key="profile" as={NextLink} href="/profile" textValue="Profile">
                   Profile
                 </DropdownItem>
-                <DropdownItem key="settings" as={NextLink} href="/settings" textValue="Settings">
-                  Settings
+                <DropdownItem key="practice" as={NextLink} href="/my-typed-list" textValue="My Typed List">
+                  My Typed List
                 </DropdownItem>
                 {isAdmin && (
                   <>
@@ -109,17 +114,17 @@ export const Navbar = () => {
                       key="admin-users"
                       as={NextLink}
                       href="/admin/users"
-                      textValue="Admin users"
+                      textValue="Manage User"
                     >
-                      Admin users
+                      Manage User
                     </DropdownItem>
                     <DropdownItem
                       key="admin-paragraphs"
                       as={NextLink}
                       href="/admin/paragraphs"
-                      textValue="Admin paragraphs"
+                      textValue="Manage Paragraphs"
                     >
-                      Admin paragraphs
+                      Manage Paragraphs
                     </DropdownItem>
                   </>
                 )}
@@ -152,20 +157,24 @@ export const Navbar = () => {
 
       <NavbarMenu>
         <div className="mx-4 mt-2 flex flex-col gap-2">
-          {siteConfig.navMenuItems.map((item, index) => (
-            <NavbarMenuItem key={`${item.href}-${index}`}>
-              <Link
-                as={NextLink}
-                className={clsx(
-                  index === siteConfig.navMenuItems.length - 1 && "text-primary font-medium",
-                )}
-                href={item.href}
-                size="lg"
-              >
-                {item.label}
-              </Link>
-            </NavbarMenuItem>
-          ))}
+          {siteConfig.navMenuItems.map((item, index) => {
+            const isActive = pathname === item.href;
+            return (
+              <NavbarMenuItem key={`${item.href}-${index}`}>
+                <Link
+                  as={NextLink}
+                  className={clsx(
+                    isActive && "underline underline-offset-4 decoration-2",
+                    !isActive && index === siteConfig.navMenuItems.length - 1 && "text-primary font-medium",
+                  )}
+                  href={item.href}
+                  size="lg"
+                >
+                  {item.label}
+                </Link>
+              </NavbarMenuItem>
+            );
+          })}
         </div>
       </NavbarMenu>
     </HeroUINavbar>

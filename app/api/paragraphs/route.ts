@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getActiveParagraphs, createParagraph } from "@/lib/db-paragraphs";
 import { isAdmin } from "@/lib/auth-helpers";
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
+import type { Session } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
 export async function GET() {
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
     );
   }
   try {
-    const session = await getServerSession(authOptions);
+    const session = (await getServerSession(authOptions)) as Session | null;
     const body = await req.json().catch(() => ({}));
     const title = typeof body.title === "string" ? body.title.trim() : "";
     const text = typeof body.text === "string" ? body.text.trim() : "";

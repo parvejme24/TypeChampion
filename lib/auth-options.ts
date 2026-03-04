@@ -13,7 +13,7 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.AUTH_SECRET,
   trustHost: true,
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user }: { user: { email?: string | null; name?: string | null; image?: string | null } }) {
       if (!user.email) return false;
       try {
         const dbUser = await upsertUserOnLogin({
@@ -37,7 +37,7 @@ export const authOptions: NextAuthOptions = {
         return true;
       }
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: import("next-auth/jwt").JWT; user?: { email?: string | null } }) {
       const email = token.email ?? user?.email;
       if (email) {
         try {
@@ -58,7 +58,7 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: import("next-auth").Session; token: import("next-auth/jwt").JWT }) {
       if (session.user && token.dbUser) {
         session.user.dbUser = token.dbUser;
       }

@@ -37,6 +37,10 @@ export async function saveScoreApi(score: {
   wrongChars: number;
   totalChars: number;
   durationSeconds?: number;
+  paragraphId?: number;
+  paragraphTitle?: string;
+  paragraphText?: string;
+  typedText?: string;
 }): Promise<{ id: string; wpm: number; accuracy: number; createdAt: string }> {
   const res = await fetch("/api/scores", {
     method: "POST",
@@ -48,6 +52,33 @@ export async function saveScoreApi(score: {
     const body = await res.json().catch(() => ({}));
     throw new Error(
       (body as { error?: string }).error ?? "Failed to save score"
+    );
+  }
+  return res.json();
+}
+
+export interface PracticeEntry {
+  id: number;
+  wpm: number;
+  accuracy: number;
+  correctChars: number;
+  wrongChars: number;
+  totalChars: number;
+  durationSeconds?: number;
+  paragraphId?: number;
+  paragraphTitle?: string | null;
+  paragraphText?: string | null;
+  typedText?: string | null;
+  createdAt: string;
+}
+
+export async function fetchMyPracticeApi(): Promise<PracticeEntry[]> {
+  const res = await fetch("/api/me/practice", { credentials: "include" });
+  if (!res.ok) {
+    if (res.status === 401) return [];
+    const body = await res.json().catch(() => ({}));
+    throw new Error(
+      (body as { error?: string }).error ?? "Failed to load practice history"
     );
   }
   return res.json();

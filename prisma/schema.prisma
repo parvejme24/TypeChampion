@@ -29,17 +29,24 @@ model Score {
   wrongChars      Int
   totalChars      Int
   durationSeconds Int?
+  paragraphId     Int?
+  paragraphTitle  String?
+  paragraphText   String?   @db.Text
+  typedText       String?   @db.Text
   createdAt       DateTime  @default(now())
 
-  user            User?     @relation(fields: [userEmail], references: [email], onDelete: SetNull)
+  user      User?      @relation(fields: [userEmail], references: [email], onDelete: SetNull)
+  paragraph Paragraph? @relation(fields: [paragraphId], references: [id], onDelete: SetNull)
 }
 
 model Paragraph {
   id             Int      @id @default(autoincrement())
   title          String
-  text           String
+  text           String   @db.Text
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
   createdByEmail String?
+
+  scores Score[]
 }
 

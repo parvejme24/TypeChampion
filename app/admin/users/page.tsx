@@ -235,7 +235,7 @@ export default function AdminUsersPage() {
                   labelPlacement="outside-left"
                   className="w-40"
                   selectedKeys={[roleFilter]}
-                  onSelectionChange={(keys) => {
+                  onSelectionChange={(keys: Iterable<string>) => {
                     const key = (Array.from(keys)[0] ?? "all") as "all" | "admin" | "user";
                     setRoleFilter(key);
                   }}
@@ -256,7 +256,7 @@ export default function AdminUsersPage() {
                   labelPlacement="outside-left"
                   className="w-40"
                   selectedKeys={[statusFilter]}
-                  onSelectionChange={(keys) => {
+                  onSelectionChange={(keys: Iterable<string>) => {
                     const key = (Array.from(keys)[0] ?? "all") as
                       | "all"
                       | "active"
@@ -363,7 +363,7 @@ export default function AdminUsersPage() {
                                 size="sm"
                                 className="max-w-28"
                                 selectedKeys={[u.role]}
-                                onSelectionChange={(keys) => {
+                                onSelectionChange={(keys: Iterable<string>) => {
                                   const key = (Array.from(keys)[0] ?? "") as
                                     | "admin"
                                     | "user";
@@ -387,7 +387,7 @@ export default function AdminUsersPage() {
                                 isDisabled={
                                   setBlocked.isPending || u.email === session?.user?.email
                                 }
-                                onValueChange={(selected) =>
+                                onValueChange={(selected: boolean) =>
                                   setBlocked.mutate({
                                     email: u.email,
                                     isBlocked: !selected,

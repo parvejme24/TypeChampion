@@ -5,8 +5,8 @@ export const siteConfig = {
   description: "Test your English typing speed and improve your skills.",
   navItems: [
     {
-      label: "Home",
-      href: "/",
+      label: "Typing Test",
+      href: "/typing-test",
     },
     {
       label: "Leaderboard",
@@ -18,6 +18,10 @@ export const siteConfig = {
     },
   ],
   navMenuItems: [
+    {
+      label: "Typing Test",
+      href: "/typing-test",
+    },
     {
       label: "Leaderboard",
       href: "/leaderboard",

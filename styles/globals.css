@@ -10,3 +10,36 @@
     --font-sans: "font", sans-serif;
     --font-mono: "monospace", monospace;
 }
+
+@keyframes slide-down-in {
+  from {
+    transform: translate(-50%, -100%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+.timer-slide-in {
+  animation: slide-down-in 0.35s ease-out;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .certificate-print,
+  .certificate-print * {
+    visibility: visible;
+  }
+  .certificate-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm;
+    min-height: 297mm;
+    box-shadow: none;
+  }
+}

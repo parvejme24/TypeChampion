@@ -13,6 +13,10 @@ export interface TypingStats {
   wrongChars: number;
   totalChars: number;
   durationSeconds?: number;
+  paragraphId?: number;
+  paragraphTitle?: string;
+  paragraphText?: string;
+  typedText?: string;
 }
 
 interface TypingTestSectionProps {
@@ -24,7 +28,7 @@ function computeStats(
   paragraph: string,
   typed: string,
   elapsedSeconds: number,
-): TypingStats {
+): Omit<TypingStats, "paragraphId" | "paragraphTitle" | "paragraphText" | "typedText"> {
   const totalChars = paragraph.length;
   let correctChars = 0;
   let wrongChars = 0;
@@ -51,7 +55,10 @@ function computeStats(
   };
 }
 
-export function TypingTestSection({ onComplete, onReset }: TypingTestSectionProps) {
+export function TypingTestSection({
+  onComplete,
+  onReset,
+}: TypingTestSectionProps) {
   const { data: paragraphs } = useQuery({
     queryKey: ["paragraphs"],
     queryFn: fetchParagraphsApi,
@@ -87,8 +94,19 @@ export function TypingTestSection({ onComplete, onReset }: TypingTestSectionProp
     }
     setStarted(false);
     const elapsedSec = startTime != null ? (Date.now() - startTime) / 1000 : 0;
-    const stats = computeStats(paragraphText, inputValueRef.current, elapsedSec);
-    onComplete({ ...stats, durationSeconds: duration });
+    const base = computeStats(
+      paragraphText,
+      inputValueRef.current,
+      elapsedSec,
+    );
+    onComplete({
+      ...base,
+      durationSeconds: duration,
+      paragraphId: currentParagraph ? Number(currentParagraph.id) : undefined,
+      paragraphTitle: currentParagraph?.title,
+      paragraphText,
+      typedText: inputValueRef.current,
+    });
   }, [paragraphText, startTime, duration, onComplete]);
 
   useEffect(() => {
@@ -139,37 +157,65 @@ export function TypingTestSection({ onComplete, onReset }: TypingTestSectionProp
   const liveAccuracy =
     totalTyped > 0 ? Math.round((correctCount / totalTyped) * 100) : 100;
 
+  const formatTimeLeft = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return m > 0 ? `${m}:${s.toString().padStart(2, "0")}` : `${s}s`;
+  };
+
   return (
-    <section className="w-full max-w-3xl mx-auto py-8 px-4">
-      <div className="flex flex-col gap-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <label className="block text-xs font-medium text-default-500 uppercase tracking-wider mb-1">
-              Paragraph
-            </label>
-            {paragraphList.length === 0 ? (
-              <p className="text-sm text-default-500">
-                No paragraphs configured yet. Ask an admin to add some.
-              </p>
-            ) : (
-              <Tabs
-                selectedKey={currentParagraph?.id}
-                onSelectionChange={(key) =>
-                  !started && setSelectedParagraphId(String(key))
-                }
-                variant="underlined"
-                classNames={{
-                  tabList: "w-full overflow-x-auto",
-                  tab: "whitespace-nowrap",
-                }}
-              >
-                {paragraphList.map((p) => (
-                  <Tab key={p.id} title={p.title || "Paragraph"} />
-                ))}
-              </Tabs>
-            )}
+    <section className="w-full  mx-auto  px-4 relative">
+      {/* Time counter: slides down from top center when typing started */}
+      {started && (
+        <div
+          className="fixed top-0 left-1/2 z-50 pt-4 timer-slide-in"
+          style={{ transform: "translateX(-50%)" }}
+          role="timer"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <div className="flex flex-col items-center gap-1">
+            <div className="px-6 py-3 rounded-2xl bg-default-100/95 dark:bg-default-50/95 backdrop-blur-md border border-default-200 dark:border-default-100 shadow-lg">
+              <span className="text-2xl md:text-3xl font-bold tabular-nums text-foreground">
+                {formatTimeLeft(timeLeft)}
+              </span>
+              <span className="ml-2 text-sm font-medium text-default-500">
+                left
+              </span>
+            </div>
+            <p className="text-xs text-default-500">Time remaining</p>
           </div>
-          <div className="w-full md:w-56">
+        </div>
+      )}
+      <div className="flex flex-col gap-4 mb-6">
+        <div>
+          <label className="block text-xs font-medium text-default-500 uppercase tracking-wider mb-1">
+            Paragraph
+          </label>
+          {paragraphList.length === 0 ? (
+            <p className="text-sm text-default-500">
+              No paragraphs configured yet. Ask an admin to add some.
+            </p>
+          ) : (
+            <Tabs
+              selectedKey={currentParagraph?.id}
+              onSelectionChange={(key) =>
+                !started && setSelectedParagraphId(String(key))
+              }
+              variant="underlined"
+              classNames={{
+                tabList: "w-full overflow-x-auto",
+                tab: "whitespace-nowrap",
+              }}
+            >
+              {paragraphList.map((p) => (
+                <Tab key={p.id} title={p.title || "Paragraph"} />
+              ))}
+            </Tabs>
+          )}
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+          <div className="flex-1 max-w-xs">
             <label className="block text-xs font-medium text-default-500 uppercase tracking-wider mb-1">
               Time
             </label>
@@ -230,14 +276,18 @@ export function TypingTestSection({ onComplete, onReset }: TypingTestSectionProp
               />
             </div>
           </div>
-        </div>
-        {started && (
-          <div className="flex justify-end">
-            <Button size="sm" variant="flat" color="default" onPress={handleReset}>
+          {started && (
+            <Button
+              size="sm"
+              variant="flat"
+              color="default"
+              onPress={handleReset}
+              className="self-start sm:self-auto"
+            >
               Reset
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div
@@ -288,7 +338,8 @@ export function TypingTestSection({ onComplete, onReset }: TypingTestSectionProp
             WPM: <strong className="text-foreground">{liveWpm}</strong>
           </span>
           <span className="text-default-600">
-            Accuracy: <strong className="text-foreground">{liveAccuracy}%</strong>
+            Accuracy:{" "}
+            <strong className="text-foreground">{liveAccuracy}%</strong>
           </span>
         </div>
       )}

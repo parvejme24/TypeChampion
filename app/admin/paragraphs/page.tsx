@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -199,7 +199,7 @@ export default function AdminParagraphsPage() {
               placeholder="e.g. Warm-up paragraph"
               size="sm"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
             />
             <Textarea
               label="Text"
@@ -208,7 +208,7 @@ export default function AdminParagraphsPage() {
               placeholder="Enter the paragraph text the user will type..."
               size="sm"
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setText(e.target.value)}
             />
             <div className="flex justify-end">
               <Button
@@ -285,7 +285,7 @@ export default function AdminParagraphsPage() {
                               size="sm"
                               labelPlacement="outside"
                               value={editingTitle}
-                              onChange={(e) => setEditingTitle(e.target.value)}
+                              onChange={(e: ChangeEvent<HTMLInputElement>) => setEditingTitle(e.target.value)}
                             />
                             <Textarea
                               className="mt-3"
@@ -294,7 +294,7 @@ export default function AdminParagraphsPage() {
                               labelPlacement="outside"
                               minRows={3}
                               value={editingText}
-                              onChange={(e) => setEditingText(e.target.value)}
+                              onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setEditingText(e.target.value)}
                             />
                           </>
                         ) : (

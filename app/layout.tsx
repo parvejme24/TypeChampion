@@ -1,6 +1,5 @@
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
-import Link from "next/link";
 import clsx from "clsx";
 
 import { Providers } from "./providers";
@@ -50,14 +49,17 @@ export default function RootLayout({
             </main>
             <footer className="w-full border-t border-default-200 dark:border-default-100 py-6 px-6">
               <div className="container mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex flex-wrap items-center gap-4 text-sm text-default-500">
-                  <Link href="/about" className="hover:text-foreground transition-colors">
-                    About
-                  </Link>
-                  <Link href="/contact" className="hover:text-foreground transition-colors">
-                    Contact
-                  </Link>
-                </div>
+                <p className="text-sm text-default-500">
+                  Developed by{" "}
+                  <a
+                    href="https://mdparvej.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-bold hover:text-foreground transition-colors"
+                  >
+                    Md Parvej
+                  </a>
+                </p>
                 <p className="text-sm text-default-500">
                   © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
                 </p>

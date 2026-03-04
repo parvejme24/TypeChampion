@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     const scores = await getLeaderboard(limit, filter);
     return NextResponse.json(
       scores.map((s) => ({
-        id: s._id?.toString(),
+        id: s.id.toString(),
         userEmail: s.userEmail,
         userName: s.userName,
         wpm: s.wpm,

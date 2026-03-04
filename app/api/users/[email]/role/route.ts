@@ -1,4 +1,5 @@
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
+import type { Session } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth-options";
 import { setUserRole } from "@/lib/db-users";
@@ -9,7 +10,7 @@ export async function PATCH(
   _req: Request,
   { params }: { params: Promise<{ email: string }> }
 ) {
-  const session = await getServerSession(authOptions);
+  const session = (await getServerSession(authOptions)) as Session | null;
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

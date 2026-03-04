@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import {
   Modal,
   ModalContent,
@@ -9,7 +10,7 @@ import {
   ModalFooter,
 } from "@heroui/modal";
 import { Button } from "@heroui/button";
-import { Spinner } from "@heroui/spinner";
+import { CertificateView } from "@/components/certificate-view";
 import type { TypingStats } from "./typing-test-section";
 
 interface ResultModalProps {
@@ -17,6 +18,8 @@ interface ResultModalProps {
   onClose: () => void;
   stats: TypingStats | null;
   isLoggedIn?: boolean;
+  userName?: string | null;
+  userEmail?: string | null;
   onSaveScore?: (stats: TypingStats) => Promise<void>;
 }
 
@@ -25,25 +28,72 @@ export function ResultModal({
   onClose,
   stats,
   isLoggedIn = false,
+  userName,
+  userEmail,
   onSaveScore,
 }: ResultModalProps) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [showCertificate, setShowCertificate] = useState(false);
 
-  const handleSave = async () => {
-    if (!stats || !onSaveScore || saving || saved) return;
+  // Auto-save when logged in and modal opens
+  useEffect(() => {
+    if (!isOpen || !isLoggedIn || !stats || !onSaveScore || saved || saving) return;
+    let cancelled = false;
     setSaving(true);
-    try {
-      await onSaveScore(stats);
-      setSaved(true);
-    } catch {
-      // Error could be shown via toast
-    } finally {
-      setSaving(false);
-    }
-  };
+    onSaveScore(stats)
+      .then(() => {
+        if (!cancelled) setSaved(true);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error("[ResultModal] Save score failed", err);
+          toast.error("Could not save score. It will not appear in My Typed List.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setSaving(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, isLoggedIn, stats, onSaveScore, saved, saving]);
 
   if (!stats) return null;
+
+  const displayName = userName?.trim() || "User";
+  const displayEmail = userEmail?.trim() || "";
+
+  if (showCertificate) {
+    return (
+      <Modal
+        isOpen
+        onOpenChange={(open: boolean) => {
+          if (!open) setShowCertificate(false);
+        }}
+        placement="center"
+        size="full"
+        classNames={{ base: "max-w-[210mm]", wrapper: "items-start pt-8" }}
+      >
+        <ModalContent>
+          <ModalHeader className="flex justify-between items-center">
+            <span>Certificate</span>
+            <Button size="sm" variant="flat" onPress={() => setShowCertificate(false)}>
+              Close
+            </Button>
+          </ModalHeader>
+          <ModalBody className="overflow-y-auto max-h-[calc(100vh-120px)]">
+            <CertificateView
+              userName={displayName}
+              userEmail={displayEmail}
+              stats={stats}
+              onPrint={() => setShowCertificate(false)}
+            />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    );
+  }
 
   return (
     <Modal
@@ -56,43 +106,57 @@ export function ResultModal({
     >
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">
-          Typing Certificate
+          <span className="text-xl font-semibold">Typing Result</span>
+          <p className="text-sm font-normal text-default-500">
+            {stats.paragraphTitle ? `Paragraph: ${stats.paragraphTitle}` : "Test complete"}
+          </p>
         </ModalHeader>
-        <ModalBody className="gap-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 rounded-lg bg-primary-50 dark:bg-primary-500/10">
-              <p className="text-sm text-default-500">WPM</p>
-              <p className="text-2xl font-bold text-primary">{stats.wpm}</p>
+        <ModalBody className="gap-6">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[120px] p-5 rounded-xl bg-primary-50 dark:bg-primary-500/15 border border-primary-200 dark:border-primary-500/30">
+              <p className="text-xs font-medium text-default-500 uppercase tracking-wider">WPM</p>
+              <p className="text-3xl font-bold text-primary mt-1">{stats.wpm}</p>
             </div>
-            <div className="p-4 rounded-lg bg-default-100">
-              <p className="text-sm text-default-500">Accuracy</p>
-              <p className="text-2xl font-bold">{stats.accuracy}%</p>
+            <div className="flex-1 min-w-[120px] p-5 rounded-xl bg-default-100 dark:bg-default-50/50 border border-default-200">
+              <p className="text-xs font-medium text-default-500 uppercase tracking-wider">Accuracy</p>
+              <p className="text-3xl font-bold text-foreground mt-1">{stats.accuracy}%</p>
             </div>
           </div>
-          <div className="flex gap-4 text-sm">
+          <div className="flex flex-wrap gap-6 text-sm text-default-600">
             <span>
-              Correct: <strong className="text-success-600">{stats.correctChars}</strong>
+              Correct: <strong className="text-success-600 dark:text-success-500">{stats.correctChars}</strong>
             </span>
             <span>
-              Wrong: <strong className="text-danger-600">{stats.wrongChars}</strong>
+              Wrong: <strong className="text-danger-600 dark:text-danger-500">{stats.wrongChars}</strong>
             </span>
-            <span className="text-default-500">
-              Total: {stats.totalChars} chars
+            <span>
+              Total: <strong className="text-foreground">{stats.totalChars}</strong> chars
             </span>
+            {stats.durationSeconds != null && (
+              <span>
+                Duration: <strong className="text-foreground">{Math.round(stats.durationSeconds / 60)} min</strong>
+              </span>
+            )}
           </div>
-        </ModalBody>
-        <ModalFooter>
-          {isLoggedIn && onSaveScore && (
-            <Button
-              color="primary"
-              variant="flat"
-              onPress={handleSave}
-              isDisabled={saving || saved}
-              startContent={saving ? <Spinner size="sm" /> : null}
-            >
-              {saved ? "Saved!" : saving ? "Saving…" : "Save score"}
-            </Button>
+          {isLoggedIn && (saved || saving) && (
+            <p className="text-sm text-success-600 dark:text-success-500">
+              {saving ? "Saving…" : "Score saved automatically. Use the button below to download your certificate."}
+            </p>
           )}
+          {!isLoggedIn && (
+            <p className="text-sm text-warning-600 dark:text-warning-500">
+              Sign in to save this result to <strong>My Typed List</strong> and view it later.
+            </p>
+          )}
+        </ModalBody>
+        <ModalFooter className="flex-wrap gap-2">
+          <Button
+            color="primary"
+            variant="flat"
+            onPress={() => setShowCertificate(true)}
+          >
+            View / Download Certificate
+          </Button>
           <Button color="primary" onPress={onClose}>
             Try again
           </Button>

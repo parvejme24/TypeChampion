@@ -82,7 +82,7 @@ export default function LeaderboardPage() {
           </div>
           <Button
             as={NextLink}
-            href="/"
+            href="/typing-test"
             color="primary"
             variant="flat"
             size="lg"
@@ -151,7 +151,7 @@ export default function LeaderboardPage() {
                         : "No scores in the last 7 days. Complete a test and save your score to appear here."}
                   </p>
                 </div>
-                <Button as={NextLink} href="/" color="primary" size="lg">
+                <Button as={NextLink} href="/typing-test" color="primary" size="lg">
                   Start typing test
                 </Button>
               </div>
