@@ -1,14 +1,12 @@
-import { ObjectId } from "mongodb";
-import { getDb } from "./mongodb";
-
-const USERS_COLLECTION = "users";
+import prisma from "./prisma";
 
 export type UserRole = "admin" | "user";
 
 export interface DbUser {
-  _id?: ObjectId;
+  id: number;
   email: string;
   fullName: string;
+  avatarUrl?: string | null;
   userCreatedDate: Date;
   lastLoginTime: Date;
   isBlocked: boolean;
@@ -19,74 +17,113 @@ export interface DbUser {
 export async function upsertUserOnLogin(input: {
   email: string;
   name?: string | null;
+  avatarUrl?: string | null;
 }): Promise<DbUser> {
-  const db = await getDb();
-  const col = db.collection<DbUser>(USERS_COLLECTION);
   const now = new Date();
 
-  const result = await col.findOneAndUpdate(
-    { email: input.email },
-    {
-      $set: {
-        fullName: input.name ?? input.email,
-        lastLoginTime: now,
-      },
-      $setOnInsert: {
-        email: input.email,
-        userCreatedDate: now,
-        isBlocked: false,
-        role: "user",
-      },
+  const user = await prisma.user.upsert({
+    where: { email: input.email },
+    create: {
+      email: input.email,
+      fullName: input.name ?? input.email,
+      avatarUrl: input.avatarUrl ?? null,
+      userCreatedDate: now,
+      lastLoginTime: now,
+      isBlocked: false,
+      role: "user",
     },
-    {
-      upsert: true,
-      returnDocument: "after",
-    }
-  );
+    update: {
+      fullName: input.name ?? input.email,
+      avatarUrl: input.avatarUrl ?? null,
+      lastLoginTime: now,
+    },
+  });
 
-  if (!result) {
-    throw new Error("Upsert user failed");
-  }
-  return result as DbUser;
+  return {
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    avatarUrl: user.avatarUrl,
+    userCreatedDate: user.userCreatedDate,
+    lastLoginTime: user.lastLoginTime,
+    isBlocked: user.isBlocked,
+    role: (user.role as UserRole | null) ?? "user",
+  };
 }
 
 export async function getUserByEmail(email: string): Promise<DbUser | null> {
-  const db = await getDb();
-  const col = db.collection<DbUser>(USERS_COLLECTION);
-  return col.findOne({ email });
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) return null;
+
+  return {
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    avatarUrl: user.avatarUrl,
+    userCreatedDate: user.userCreatedDate,
+    lastLoginTime: user.lastLoginTime,
+    isBlocked: user.isBlocked,
+    role: (user.role as UserRole | null) ?? "user",
+  };
 }
 
 export async function setUserBlocked(
   email: string,
   isBlocked: boolean
 ): Promise<DbUser | null> {
-  const db = await getDb();
-  const col = db.collection<DbUser>(USERS_COLLECTION);
-  const result = await col.findOneAndUpdate(
-    { email },
-    { $set: { isBlocked } },
-    { returnDocument: "after" }
-  );
-  return result as DbUser | null;
+  const user = await prisma.user.update({
+    where: { email },
+    data: { isBlocked },
+  });
+
+  return {
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    userCreatedDate: user.userCreatedDate,
+    lastLoginTime: user.lastLoginTime,
+    isBlocked: user.isBlocked,
+    role: (user.role as UserRole | null) ?? "user",
+  };
 }
 
 export async function getAllUsers(): Promise<DbUser[]> {
-  const db = await getDb();
-  const col = db.collection<DbUser>(USERS_COLLECTION);
-  const cursor = col.find({}).sort({ userCreatedDate: -1 });
-  return cursor.toArray();
+  const users = await prisma.user.findMany({
+    orderBy: { userCreatedDate: "desc" },
+  });
+
+  return users.map((user) => ({
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    avatarUrl: user.avatarUrl,
+    userCreatedDate: user.userCreatedDate,
+    lastLoginTime: user.lastLoginTime,
+    isBlocked: user.isBlocked,
+    role: (user.role as UserRole | null) ?? "user",
+  }));
 }
 
 export async function setUserRole(
   email: string,
   role: UserRole
 ): Promise<DbUser | null> {
-  const db = await getDb();
-  const col = db.collection<DbUser>(USERS_COLLECTION);
-  const result = await col.findOneAndUpdate(
-    { email },
-    { $set: { role } },
-    { returnDocument: "after" }
-  );
-  return result as DbUser | null;
+  const user = await prisma.user.update({
+    where: { email },
+    data: { role },
+  });
+
+  return {
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    avatarUrl: user.avatarUrl,
+    userCreatedDate: user.userCreatedDate,
+    lastLoginTime: user.lastLoginTime,
+    isBlocked: user.isBlocked,
+    role: (user.role as UserRole | null) ?? "user",
+  };
 }

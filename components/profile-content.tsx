@@ -61,16 +61,10 @@ export function ProfileContent() {
   }
 
   const displayName = session?.user?.name ?? user.fullName ?? user.email;
-  const isSessionOnly = user.fromDatabase === false;
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-4 py-12">
       <Card className="w-full max-w-md">
-        {isSessionOnly && (
-          <div className="rounded-t-lg bg-warning-100 dark:bg-warning-500/20 px-4 py-3 text-center text-sm text-warning-700 dark:text-warning-400 border-b border-warning-200 dark:border-warning-500/30">
-            Profile not saved to database yet. Check DB connection and retry.
-          </div>
-        )}
         <CardHeader className="flex flex-col items-center gap-3 px-8 pt-8 pb-4">
           <Avatar
             isBordered
@@ -103,21 +97,13 @@ export function ProfileContent() {
             <div className="flex justify-between">
               <span className="text-default-500">Member since</span>
               <span className="text-foreground font-medium">
-                {user.userCreatedDate
-                  ? formatDate(user.userCreatedDate)
-                  : isSessionOnly
-                    ? "Not saved"
-                    : "—"}
+                {user.userCreatedDate ? formatDate(user.userCreatedDate) : "—"}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-default-500">Last login</span>
               <span className="text-foreground font-medium">
-                {user.lastLoginTime
-                  ? formatDate(user.lastLoginTime)
-                  : isSessionOnly
-                    ? "Not saved"
-                    : "—"}
+                {user.lastLoginTime ? formatDate(user.lastLoginTime) : "—"}
               </span>
             </div>
             <div className="flex justify-between items-center">

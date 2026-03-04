@@ -1,6 +1,7 @@
 import type { NextAuthOptions } from "next-auth";
 import Google from "next-auth/providers/google";
 import { upsertUserOnLogin, getUserByEmail } from "./db-users";
+import { sendLoginEmail } from "./email";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -18,11 +19,16 @@ export const authOptions: NextAuthOptions = {
         const dbUser = await upsertUserOnLogin({
           email: user.email,
           name: user.name ?? undefined,
+          avatarUrl: user.image ?? null,
         });
         if (dbUser.isBlocked) {
           console.error("[Auth] Sign-in denied: account is blocked", user.email);
           return false;
         }
+        // Fire-and-forget login email; don't block sign-in if it fails
+        void sendLoginEmail(user.email, user.name).catch((err) => {
+          console.error("[Auth] Failed to send login email:", err);
+        });
         return true;
       } catch (err) {
         // Log so you can see the real error in the terminal (e.g. MongoDB connection)

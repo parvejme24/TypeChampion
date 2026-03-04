@@ -8,7 +8,6 @@ import { Providers } from "./providers";
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
-import { DbStatusBadge } from "@/components/db-status-badge";
 
 export const metadata: Metadata = {
   title: {
@@ -43,7 +42,7 @@ export default function RootLayout({
         )}
         suppressHydrationWarning
       >
-        <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
+        <Providers themeProps={{ attribute: "class", forcedTheme: "dark", enableSystem: false }}>
           <div className="relative flex flex-col min-h-screen">
             <Navbar />
             <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow flex flex-col border-gray-800 border-l-1 border-r-1">
@@ -58,7 +57,6 @@ export default function RootLayout({
                   <Link href="/contact" className="hover:text-foreground transition-colors">
                     Contact
                   </Link>
-                  <DbStatusBadge />
                 </div>
                 <p className="text-sm text-default-500">
                   © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.

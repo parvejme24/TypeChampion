@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              Int      @id @default(autoincrement())
+  email           String   @unique
+  fullName        String
+  avatarUrl       String?
+  userCreatedDate DateTime
+  lastLoginTime   DateTime
+  isBlocked       Boolean  @default(false)
+  role            String   @default("user")
+
+  scores          Score[]
+}
+
+model Score {
+  id              Int       @id @default(autoincrement())
+  userEmail       String?
+  userName        String
+  wpm             Int
+  accuracy        Float
+  correctChars    Int
+  wrongChars      Int
+  totalChars      Int
+  durationSeconds Int?
+  createdAt       DateTime  @default(now())
+
+  user            User?     @relation(fields: [userEmail], references: [email], onDelete: SetNull)
+}
+
+model Paragraph {
+  id             Int      @id @default(autoincrement())
+  title          String
+  text           String
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  createdByEmail String?
+}
+

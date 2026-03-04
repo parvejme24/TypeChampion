@@ -18,6 +18,7 @@ export async function GET() {
       users.map((u) => ({
         email: u.email,
         fullName: u.fullName,
+        avatarUrl: u.avatarUrl ?? null,
         userCreatedDate: u.userCreatedDate.toISOString(),
         lastLoginTime: u.lastLoginTime.toISOString(),
         isBlocked: u.isBlocked,

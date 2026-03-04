@@ -24,7 +24,6 @@ import {
 } from "@heroui/dropdown";
 
 import { siteConfig } from "@/config/site";
-import { ThemeSwitch } from "@/components/theme-switch";
 import { Logo } from "@/components/icons";
 
 export const Navbar = () => {
@@ -79,9 +78,6 @@ export const Navbar = () => {
         justify="end"
       >
         <NavbarItem>
-          <ThemeSwitch />
-        </NavbarItem>
-        <NavbarItem>
           {isAuthenticated ? (
             <Dropdown placement="bottom-end">
               <DropdownTrigger>
@@ -122,14 +118,24 @@ export const Navbar = () => {
                   Settings
                 </DropdownItem>
                 {isAdmin && (
-                  <DropdownItem
-                    key="admin"
-                    as={NextLink}
-                    href="/admin/users"
-                    textValue="Admin users"
-                  >
-                    Admin users
-                  </DropdownItem>
+                  <>
+                    <DropdownItem
+                      key="admin-users"
+                      as={NextLink}
+                      href="/admin/users"
+                      textValue="Admin users"
+                    >
+                      Admin users
+                    </DropdownItem>
+                    <DropdownItem
+                      key="admin-paragraphs"
+                      as={NextLink}
+                      href="/admin/paragraphs"
+                      textValue="Admin paragraphs"
+                    >
+                      Admin paragraphs
+                    </DropdownItem>
+                  </>
                 )}
                 <DropdownItem
                   key="logout"
@@ -155,7 +161,6 @@ export const Navbar = () => {
       </NavbarContent>
 
       <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
-        <ThemeSwitch />
         <NavbarMenuToggle />
       </NavbarContent>
 

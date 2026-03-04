@@ -98,7 +98,7 @@ export default function LeaderboardPage() {
         <Card className="border border-default-200 dark:border-default-100 overflow-hidden">
           <CardBody className="p-0">
             {/* Time-based filters */}
-            <div className="border-b border-default-200 dark:border-default-100 px-4 pt-4 pb-0">
+            <div className="border-b border-default-200 dark:border-default-100 px-4 pt-4 pb-0 bg-default-100/60 dark:bg-default-50/10">
               <p className="text-xs font-medium text-default-500 uppercase tracking-wider mb-3">
                 Time period
               </p>

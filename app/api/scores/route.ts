@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       session.user.name ?? session.user.email
     );
     return NextResponse.json({
-      id: score._id?.toString(),
+      id: score.id.toString(),
       wpm: score.wpm,
       accuracy: score.accuracy,
       createdAt: score.createdAt.toISOString(),

@@ -15,11 +15,13 @@ export async function GET() {
       dbUser = await upsertUserOnLogin({
         email: session.user.email,
         name: session.user.name ?? undefined,
+        avatarUrl: session.user.image ?? null,
       });
     }
     return NextResponse.json({
       email: dbUser.email,
       fullName: dbUser.fullName,
+      avatarUrl: dbUser.avatarUrl ?? session.user.image ?? null,
       userCreatedDate: dbUser.userCreatedDate.toISOString(),
       lastLoginTime: dbUser.lastLoginTime.toISOString(),
       isBlocked: dbUser.isBlocked,
@@ -31,6 +33,7 @@ export async function GET() {
     return NextResponse.json({
       email: session.user.email,
       fullName: session.user.name ?? session.user.email ?? "",
+      avatarUrl: session.user.image ?? null,
       userCreatedDate: null,
       lastLoginTime: null,
       isBlocked: false,

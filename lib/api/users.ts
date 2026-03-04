@@ -1,6 +1,7 @@
 export interface ApiUser {
   email: string;
   fullName: string;
+  avatarUrl?: string | null;
   userCreatedDate: string | null;
   lastLoginTime: string | null;
   isBlocked: boolean;
