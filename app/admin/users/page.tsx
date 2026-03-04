@@ -5,13 +5,18 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardHeader, CardBody } from "@heroui/card";
-import { Spinner } from "@heroui/spinner";
 import { Skeleton } from "@heroui/skeleton";
 import { Chip } from "@heroui/chip";
 import { Button } from "@heroui/button";
 import { Select, SelectItem } from "@heroui/select";
 import { Avatar } from "@heroui/avatar";
-import { fetchAllUsersApi, setUserRoleApi, type ApiUser } from "@/lib/api/users";
+import { Switch } from "@heroui/switch";
+import {
+  fetchAllUsersApi,
+  setUserRoleApi,
+  setUserBlockedApi,
+  type ApiUser,
+} from "@/lib/api/users";
 
 const userListKeys = { all: ["users", "list"] as const };
 
@@ -29,10 +34,21 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "blocked">("all");
 
-  const { data: users, isLoading, error } = useQuery({
+  const { data: users, isLoading, error, refetch } = useQuery({
     queryKey: userListKeys.all,
     queryFn: fetchAllUsersApi,
     enabled: status === "authenticated",
+    // Always keep fresh: refetch when window focuses and poll every 5s
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000,
+    refetchIntervalInBackground: true,
+  });
+  const setBlocked = useMutation({
+    mutationFn: ({ email, isBlocked }: { email: string; isBlocked: boolean }) =>
+      setUserBlockedApi(email, isBlocked),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userListKeys.all });
+    },
   });
   const setRole = useMutation({
     mutationFn: ({ email, role }: { email: string; role: "admin" | "user" }) =>
@@ -167,33 +183,37 @@ export default function AdminUsersPage() {
                 View all accounts, update roles, and monitor account status.
               </p>
             </div>
-            <div className="grid grid-cols-3 gap-3 min-w-[260px]">
-              <Card className="py-2 px-3">
-                <CardBody className="p-0 flex flex-col gap-1">
-                  <span className="text-[11px] uppercase tracking-wide text-default-500">
-                    Total users
-                  </span>
-                  <span className="text-xl font-semibold">{totalUsers}</span>
-                </CardBody>
-              </Card>
-              <Card className="py-2 px-3">
-                <CardBody className="p-0 flex flex-col gap-1">
-                  <span className="text-[11px] uppercase tracking-wide text-default-500">
-                    Admins
-                  </span>
-                  <span className="text-xl font-semibold text-primary">{adminCount}</span>
-                </CardBody>
-              </Card>
-              <Card className="py-2 px-3">
-                <CardBody className="p-0 flex flex-col gap-1">
-                  <span className="text-[11px] uppercase tracking-wide text-default-500">
-                    Blocked
-                  </span>
-                  <span className="text-xl font-semibold text-danger">
-                    {blockedCount}
-                  </span>
-                </CardBody>
-              </Card>
+            <div className="flex flex-col items-end gap-3">
+              <div className="grid grid-cols-3 gap-3 min-w-[260px]">
+                <Card className="py-2 px-3">
+                  <CardBody className="p-0 flex flex-col gap-1">
+                    <span className="text-[11px] uppercase tracking-wide text-default-500">
+                      Total users
+                    </span>
+                    <span className="text-xl font-semibold">{totalUsers}</span>
+                  </CardBody>
+                </Card>
+                <Card className="py-2 px-3">
+                  <CardBody className="p-0 flex flex-col gap-1">
+                    <span className="text-[11px] uppercase tracking-wide text-default-500">
+                      Admins
+                    </span>
+                    <span className="text-xl font-semibold text-primary">
+                      {adminCount}
+                    </span>
+                  </CardBody>
+                </Card>
+                <Card className="py-2 px-3">
+                  <CardBody className="p-0 flex flex-col gap-1">
+                    <span className="text-[11px] uppercase tracking-wide text-default-500">
+                      Blocked
+                    </span>
+                    <span className="text-xl font-semibold text-danger">
+                      {blockedCount}
+                    </span>
+                  </CardBody>
+                </Card>
+              </div>
             </div>
           </div>
 
@@ -338,26 +358,45 @@ export default function AdminUsersPage() {
                             {u.lastLoginTime ? formatDate(u.lastLoginTime) : "—"}
                           </td>
                           <td className="py-3 px-2">
-                            <Select
-                              size="sm"
-                              className="max-w-28"
-                              selectedKeys={[u.role]}
-                              onSelectionChange={(keys) => {
-                                const key = (Array.from(keys)[0] ?? "") as
-                                  | "admin"
-                                  | "user";
-                                if (key && key !== u.role)
-                                  setRole.mutate({ email: u.email, role: key });
-                              }}
-                              isDisabled={setRole.isPending}
-                            >
-                              <SelectItem key="user" textValue="User">
-                                User
-                              </SelectItem>
-                              <SelectItem key="admin" textValue="Admin">
-                                Admin
-                              </SelectItem>
-                            </Select>
+                            <div className="flex items-center gap-2">
+                              <Select
+                                size="sm"
+                                className="max-w-28"
+                                selectedKeys={[u.role]}
+                                onSelectionChange={(keys) => {
+                                  const key = (Array.from(keys)[0] ?? "") as
+                                    | "admin"
+                                    | "user";
+                                  if (key && key !== u.role)
+                                    setRole.mutate({ email: u.email, role: key });
+                                }}
+                                isDisabled={setRole.isPending || setBlocked.isPending}
+                              >
+                                <SelectItem key="user" textValue="User">
+                                  User
+                                </SelectItem>
+                                <SelectItem key="admin" textValue="Admin">
+                                  Admin
+                                </SelectItem>
+                              </Select>
+                              <Switch
+                                size="sm"
+                                aria-label={u.isBlocked ? "Unblock user" : "Block user"}
+                                isSelected={!u.isBlocked}
+                                color={u.isBlocked ? "default" : "danger"}
+                                isDisabled={
+                                  setBlocked.isPending || u.email === session?.user?.email
+                                }
+                                onValueChange={(selected) =>
+                                  setBlocked.mutate({
+                                    email: u.email,
+                                    isBlocked: !selected,
+                                  })
+                                }
+                              >
+                                {u.isBlocked ? "Blocked" : "Active"}
+                              </Switch>
+                            </div>
                           </td>
                         </tr>
                       ))}
