@@ -25,7 +25,14 @@ import {
 } from "@heroui/dropdown";
 
 import { siteConfig } from "@/config/site";
-import { Logo } from "@/components/icons";
+import {
+  Logo,
+  ProfileSettingsIcon,
+  ProfileTypedListIcon,
+  ProfileUsersIcon,
+  ProfileDocumentIcon,
+  ProfileLogoutIcon,
+} from "@/components/icons";
 
 export const Navbar = () => {
   const pathname = usePathname();
@@ -91,21 +98,49 @@ export const Navbar = () => {
               >
                 <DropdownItem
                   key="user-info"
-                  className="h-14 gap-1 flex flex-col items-center justify-center text-center"
+                  className="h-auto min-h-14 py-3 gap-3 opacity-100"
                   isReadOnly
                   textValue={user?.email ?? "Signed in user"}
+                  startContent={
+                    <Avatar
+                      isBordered
+                      as="span"
+                      size="md"
+                      src={user?.image ?? undefined}
+                      name={user?.name ?? user?.email ?? "User"}
+                      className="shrink-0"
+                    />
+                  }
                 >
-                  {user?.name && (
-                    <p className="text-sm font-medium truncate w-full">{user.name}</p>
-                  )}
-                  <p className="text-xs text-default-500 truncate w-full">
-                    {user?.email}
-                  </p>
+                  <div className="flex flex-col min-w-0 flex-1 text-start">
+                    {user?.name && (
+                      <p className="text-sm font-medium truncate w-full">{user.name}</p>
+                    )}
+                    <p className="text-xs text-default-500 truncate w-full">
+                      {user?.email}
+                    </p>
+                  </div>
                 </DropdownItem>
-                <DropdownItem key="profile" as={NextLink} href="/profile" textValue="Profile">
+                <DropdownItem
+                  key="profile"
+                  as={NextLink}
+                  href="/profile"
+                  textValue="Profile"
+                  startContent={
+                    <ProfileSettingsIcon className="text-default-500 shrink-0" />
+                  }
+                >
                   Profile
                 </DropdownItem>
-                <DropdownItem key="practice" as={NextLink} href="/my-typed-list" textValue="My Typed List">
+                <DropdownItem
+                  key="practice"
+                  as={NextLink}
+                  href="/my-typed-list"
+                  textValue="My Typed List"
+                  startContent={
+                    <ProfileTypedListIcon className="text-default-500 shrink-0" />
+                  }
+                >
                   My Typed List
                 </DropdownItem>
                 {isAdmin && (
@@ -115,6 +150,9 @@ export const Navbar = () => {
                       as={NextLink}
                       href="/admin/users"
                       textValue="Manage User"
+                      startContent={
+                        <ProfileUsersIcon className="text-default-500 shrink-0" />
+                      }
                     >
                       Manage User
                     </DropdownItem>
@@ -123,6 +161,9 @@ export const Navbar = () => {
                       as={NextLink}
                       href="/admin/paragraphs"
                       textValue="Manage Paragraphs"
+                      startContent={
+                        <ProfileDocumentIcon className="text-default-500 shrink-0" />
+                      }
                     >
                       Manage Paragraphs
                     </DropdownItem>
@@ -133,6 +174,7 @@ export const Navbar = () => {
                   color="danger"
                   onPress={() => signOut({ callbackUrl: "/" })}
                   textValue="Logout"
+                  startContent={<ProfileLogoutIcon className="shrink-0" />}
                 >
                   Logout
                 </DropdownItem>
