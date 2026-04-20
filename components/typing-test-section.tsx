@@ -24,6 +24,9 @@ interface TypingTestSectionProps {
   onReset: () => void;
 }
 
+/** Preset test lengths shown as tabs (seconds, ascending). */
+const TIME_PRESET_SECONDS = [30, 60, 120, 300, 600] as const;
+
 function computeStats(
   paragraph: string,
   typed: string,
@@ -221,56 +224,54 @@ export function TypingTestSection({
             </label>
             <Tabs
               selectedKey={
-                duration === 60
-                  ? "1"
-                  : duration === 120
-                    ? "2"
-                    : duration === 300
-                      ? "5"
-                      : duration === 600
-                        ? "10"
-                        : "custom"
+                TIME_PRESET_SECONDS.some((s) => s === duration)
+                  ? String(duration)
+                  : "custom"
               }
               onSelectionChange={(key) => {
                 if (started) return;
                 const k = String(key);
-                if (k === "1") setDuration(60);
-                else if (k === "2") setDuration(120);
-                else if (k === "5") setDuration(300);
-                else if (k === "10") setDuration(600);
+                if (k === "custom") return;
+                const sec = Number(k);
+                if (Number.isFinite(sec) && sec > 0) setDuration(sec);
               }}
               variant="underlined"
-              classNames={{ tabList: "gap-2" }}
+              classNames={{
+                tabList: "gap-2 w-full overflow-x-auto flex-nowrap",
+                tab: "whitespace-nowrap",
+              }}
             >
-              <Tab key="1" title="1 min" />
-              <Tab key="2" title="2 min" />
-              <Tab key="5" title="5 min" />
-              <Tab key="10" title="10 min" />
+              {TIME_PRESET_SECONDS.map((sec) => (
+                <Tab key={String(sec)} title={`${sec}s`} />
+              ))}
               <Tab
                 key="custom"
                 title={
                   <span className="flex items-center gap-1">
                     Custom
                     <span className="text-xs text-default-400">
-                      ({Math.round(duration / 60)}m)
+                      ({duration}s)
                     </span>
                   </span>
                 }
               />
             </Tabs>
             <div className="mt-2">
+              <label className="block text-xs text-default-500 mb-1">
+                Length (seconds)
+              </label>
               <input
                 type="number"
-                min={0.5}
-                max={60}
-                step={0.5}
-                value={Number((duration / 60).toFixed(1))}
+                min={1}
+                max={3600}
+                step={1}
+                value={duration}
                 onChange={(e) => {
                   if (started) return;
                   const v = Number(e.target.value);
                   if (!Number.isFinite(v)) return;
-                  const clamped = Math.max(0.5, Math.min(60, v));
-                  setDuration(Math.round(clamped * 60));
+                  const clamped = Math.max(1, Math.min(3600, Math.round(v)));
+                  setDuration(clamped);
                 }}
                 className="w-full px-3 py-2 rounded-lg border border-default-200 dark:border-default-100 bg-background text-foreground text-sm focus:outline-none focus:border-primary transition-colors"
               />

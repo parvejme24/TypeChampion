@@ -23,6 +23,14 @@ interface ResultModalProps {
   onSaveScore?: (stats: TypingStats) => Promise<void>;
 }
 
+function formatDurationLabel(seconds: number) {
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = seconds / 60;
+  return Number.isInteger(minutes)
+    ? `${minutes} min`
+    : `${minutes.toFixed(1)} min`;
+}
+
 export function ResultModal({
   isOpen,
   onClose,
@@ -134,7 +142,10 @@ export function ResultModal({
             </span>
             {stats.durationSeconds != null && (
               <span>
-                Duration: <strong className="text-foreground">{Math.round(stats.durationSeconds / 60)} min</strong>
+                Duration:{" "}
+                <strong className="text-foreground">
+                  {formatDurationLabel(stats.durationSeconds)}
+                </strong>
               </span>
             )}
           </div>
