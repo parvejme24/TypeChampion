@@ -17,6 +17,8 @@ export async function GET(req: Request) {
         userEmail: s.userEmail,
         userName: s.userName,
         wpm: s.wpm,
+        rawWpm: s.rawWpm,
+        consistency: s.consistency,
         accuracy: s.accuracy,
         correctChars: s.correctChars,
         wrongChars: s.wrongChars,

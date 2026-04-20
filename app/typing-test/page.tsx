@@ -17,6 +17,8 @@ export default function TypingTestPage() {
   const handleSaveScore = useCallback(async (stats: TypingStats) => {
     await saveScoreApi({
       wpm: stats.wpm,
+      rawWpm: stats.rawWpm,
+      consistency: stats.consistency,
       accuracy: stats.accuracy,
       correctChars: stats.correctChars,
       wrongChars: stats.wrongChars,
@@ -49,7 +51,20 @@ export default function TypingTestPage() {
   }, []);
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-col flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <header className="mb-8 sm:mb-10">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
+          Typing test
+        </h1>
+        <p className="mt-2 text-default-500 text-sm leading-relaxed">
+          Choose a passage and time, then press{" "}
+          <kbd className="px-1.5 py-0.5 rounded border border-default-200 bg-default-100 text-default-700 text-xs font-sans">
+            Space
+          </kbd>{" "}
+          to start. Results save when you are signed in.
+        </p>
+      </header>
+
       <TypingTestSection
         key={testKey}
         onComplete={handleTestComplete}

@@ -3,6 +3,8 @@ export interface LeaderboardEntry {
   userEmail: string;
   userName: string;
   wpm: number;
+  rawWpm: number;
+  consistency: number;
   accuracy: number;
   correctChars: number;
   wrongChars: number;
@@ -32,6 +34,8 @@ export async function fetchLeaderboardApi(
 
 export async function saveScoreApi(score: {
   wpm: number;
+  rawWpm: number;
+  consistency: number;
   accuracy: number;
   correctChars: number;
   wrongChars: number;
@@ -41,7 +45,14 @@ export async function saveScoreApi(score: {
   paragraphTitle?: string;
   paragraphText?: string;
   typedText?: string;
-}): Promise<{ id: string; wpm: number; accuracy: number; createdAt: string }> {
+}): Promise<{
+  id: string;
+  wpm: number;
+  rawWpm: number;
+  consistency: number;
+  accuracy: number;
+  createdAt: string;
+}> {
   const res = await fetch("/api/scores", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -60,6 +71,8 @@ export async function saveScoreApi(score: {
 export interface PracticeEntry {
   id: number;
   wpm: number;
+  rawWpm: number;
+  consistency: number;
   accuracy: number;
   correctChars: number;
   wrongChars: number;

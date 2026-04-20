@@ -15,6 +15,8 @@ export async function GET() {
       scores.map((s) => ({
         id: s.id,
         wpm: s.wpm,
+        rawWpm: s.rawWpm,
+        consistency: s.consistency,
         accuracy: s.accuracy,
         correctChars: s.correctChars,
         wrongChars: s.wrongChars,

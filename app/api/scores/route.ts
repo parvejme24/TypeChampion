@@ -12,6 +12,8 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const wpm = Number(body.wpm) || 0;
+    const rawWpm = Number(body.rawWpm) || 0;
+    const consistency = Number(body.consistency) || 0;
     const accuracy = Number(body.accuracy) || 0;
     const correctChars = Number(body.correctChars) || 0;
     const wrongChars = Number(body.wrongChars) || 0;
@@ -25,6 +27,8 @@ export async function POST(req: Request) {
     const score = await addScore(
       {
         wpm,
+        rawWpm,
+        consistency,
         accuracy,
         correctChars,
         wrongChars,
@@ -41,6 +45,8 @@ export async function POST(req: Request) {
     return NextResponse.json({
       id: score.id.toString(),
       wpm: score.wpm,
+      rawWpm: score.rawWpm,
+      consistency: score.consistency,
       accuracy: score.accuracy,
       createdAt: score.createdAt.toISOString(),
     });

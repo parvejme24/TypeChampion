@@ -75,8 +75,9 @@ export default function LeaderboardPage() {
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               Global Typing Leaderboard
             </h1>
-            <p className="text-default-500 text-lg">
-              Top typists by best WPM. Take a test and save your score to appear
+            <p className="text-default-500 text-lg max-w-xl mx-auto">
+              Top typists by best WPM, with accuracy, raw WPM, consistency, and
+              the date of that best run. Take a test while signed in to appear
               here.
             </p>
           </div>
@@ -160,17 +161,26 @@ export default function LeaderboardPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-default-200 dark:border-default-100 bg-default-50/50 dark:bg-default-100/5">
-                      <th className="text-left py-4 px-4 font-semibold text-foreground w-24">
+                      <th className="text-left py-4 px-3 font-semibold text-foreground w-24">
                         Rank
                       </th>
-                      <th className="text-left py-4 px-4 font-semibold text-foreground">
+                      <th className="text-left py-4 px-3 font-semibold text-foreground min-w-[140px]">
                         User
                       </th>
-                      <th className="text-right py-4 px-4 font-semibold text-foreground w-28">
-                        Best WPM
+                      <th className="text-right py-4 px-3 font-semibold text-foreground whitespace-nowrap">
+                        WPM
                       </th>
-                      <th className="text-right py-4 px-4 font-semibold text-foreground w-24">
+                      <th className="text-right py-4 px-3 font-semibold text-foreground whitespace-nowrap">
+                        Raw
+                      </th>
+                      <th className="text-right py-4 px-3 font-semibold text-foreground whitespace-nowrap">
                         Accuracy
+                      </th>
+                      <th className="text-right py-4 px-3 font-semibold text-foreground whitespace-nowrap">
+                        Consistency
+                      </th>
+                      <th className="text-right py-4 px-3 font-semibold text-foreground whitespace-nowrap">
+                        Date
                       </th>
                     </tr>
                   </thead>
@@ -183,10 +193,10 @@ export default function LeaderboardPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.02 }}
                       >
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-3">
                           <RankBadge rank={index + 1} />
                         </td>
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-3">
                           <div className="flex items-center gap-3">
                             <Avatar
                               name={entry.userName || entry.userEmail}
@@ -204,15 +214,24 @@ export default function LeaderboardPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-4 px-4 text-right">
+                        <td className="py-4 px-3 text-right">
                           <span className="font-bold text-primary text-lg tabular-nums">
                             {entry.wpm}
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-right">
+                        <td className="py-4 px-3 text-right tabular-nums text-foreground">
+                          {entry.rawWpm}
+                        </td>
+                        <td className="py-4 px-3 text-right">
                           <Chip size="sm" variant="flat" color="success">
                             {entry.accuracy}%
                           </Chip>
+                        </td>
+                        <td className="py-4 px-3 text-right tabular-nums text-default-700">
+                          {Math.round(entry.consistency)}%
+                        </td>
+                        <td className="py-4 px-3 text-right text-default-500 whitespace-nowrap text-xs">
+                          {formatDate(entry.createdAt)}
                         </td>
                       </motion.tr>
                     ))}
@@ -225,7 +244,8 @@ export default function LeaderboardPage() {
 
         {list.length > 0 && (
           <p className="text-center text-sm text-default-400 mt-6">
-            Best score per user. Sorted by WPM. Top {list.length} for{" "}
+            Best score per user (full metrics from that run). Sorted by WPM. Top{" "}
+            {list.length} for{" "}
             {timeFilter === "today"
               ? "today"
               : timeFilter === "weekly"

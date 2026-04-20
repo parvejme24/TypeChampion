@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState, useMemo, type ChangeEvent } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +18,8 @@ import {
   ModalFooter,
 } from "@heroui/modal";
 import { toast } from "sonner";
+import { Select, SelectItem } from "@heroui/select";
+import { Chip } from "@heroui/chip";
 import {
   fetchParagraphsApi,
   createParagraphApi,
@@ -25,6 +27,14 @@ import {
   deleteParagraphApi,
   type ApiParagraph,
 } from "@/lib/api/paragraphs";
+import {
+  PARAGRAPH_CATEGORY_IDS,
+  PARAGRAPH_CATEGORY_LABELS,
+  PARAGRAPH_CATEGORY_CHIP_COLOR,
+  paragraphCategoryRank,
+  parseParagraphCategory,
+  type ParagraphCategoryId,
+} from "@/lib/paragraph-categories";
 import { EditIcon, DeleteIcon } from "@/components/icons";
 
 const paragraphKeys = {
@@ -37,9 +47,12 @@ export default function AdminParagraphsPage() {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
+  const [category, setCategory] = useState<ParagraphCategoryId>("easy");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingText, setEditingText] = useState("");
+  const [editingCategory, setEditingCategory] =
+    useState<ParagraphCategoryId>("easy");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewParagraph, setViewParagraph] = useState<ApiParagraph | null>(null);
   // successMessage/errorMessage were removed; toasts are used instead
@@ -55,11 +68,19 @@ export default function AdminParagraphsPage() {
   });
 
   const createParagraph = useMutation({
-    mutationFn: ({ title, text }: { title: string; text: string }) =>
-      createParagraphApi({ title, text }),
+    mutationFn: ({
+      title,
+      text,
+      category: cat,
+    }: {
+      title: string;
+      text: string;
+      category: ParagraphCategoryId;
+    }) => createParagraphApi({ title, text, category: cat }),
     onSuccess: (created) => {
       setTitle("");
       setText("");
+      setCategory("easy");
       queryClient.invalidateQueries({ queryKey: paragraphKeys.all });
       toast.success(
         created.title
@@ -77,8 +98,17 @@ export default function AdminParagraphsPage() {
   });
 
   const updateParagraph = useMutation({
-    mutationFn: (input: { id: string; title: string; text: string }) =>
-      updateParagraphApi(input.id, { title: input.title, text: input.text }),
+    mutationFn: (input: {
+      id: string;
+      title: string;
+      text: string;
+      category: ParagraphCategoryId;
+    }) =>
+      updateParagraphApi(input.id, {
+        title: input.title,
+        text: input.text,
+        category: input.category,
+      }),
     onSuccess: (updated) => {
       toast.success(
         updated.title
@@ -88,6 +118,7 @@ export default function AdminParagraphsPage() {
       setEditingId(null);
       setEditingTitle("");
       setEditingText("");
+      setEditingCategory("easy");
       queryClient.invalidateQueries({ queryKey: paragraphKeys.all });
     },
     onError: (err) => {
@@ -114,6 +145,18 @@ export default function AdminParagraphsPage() {
       toast.error(message);
     },
   });
+
+  const list = useMemo(() => {
+    const raw = paragraphs ?? [];
+    return [...raw].sort((a, b) => {
+      const ra = paragraphCategoryRank(a.category ?? "medium");
+      const rb = paragraphCategoryRank(b.category ?? "medium");
+      if (ra !== rb) return ra - rb;
+      return (a.title || "").localeCompare(b.title || "", undefined, {
+        sensitivity: "base",
+      });
+    });
+  }, [paragraphs]);
 
   if (status === "loading" || status === "unauthenticated") {
     return (
@@ -180,15 +223,14 @@ export default function AdminParagraphsPage() {
     );
   }
 
-  const list = paragraphs ?? [];
-
   return (
     <div className="flex-1 w-full max-w-6xl mx-auto space-y-6 mb-14">
       <Card>
         <CardHeader className="flex flex-col gap-1 px-6 pt-6 pb-2">
           <h1 className="text-2xl font-semibold">Paragraphs</h1>
           <p className="text-sm text-default-500">
-            Create and manage typing paragraphs used in the test.
+            Admins only: add, edit, or delete paragraphs. Set difficulty (Easy → Expert)
+            for each; typists see it on the typing test page.
           </p>
         </CardHeader>
         <CardBody className="px-6 pb-6 pt-2 space-y-4">
@@ -210,6 +252,23 @@ export default function AdminParagraphsPage() {
               value={text}
               onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setText(e.target.value)}
             />
+            <Select
+              label="Difficulty"
+              labelPlacement="outside"
+              size="sm"
+              className="max-w-xs"
+              selectedKeys={[category]}
+              onSelectionChange={(keys: Iterable<string>) => {
+                const key = Array.from(keys)[0];
+                if (key) setCategory(parseParagraphCategory(key));
+              }}
+            >
+              {PARAGRAPH_CATEGORY_IDS.map((id) => (
+                <SelectItem key={id} textValue={PARAGRAPH_CATEGORY_LABELS[id]}>
+                  {PARAGRAPH_CATEGORY_LABELS[id]}
+                </SelectItem>
+              ))}
+            </Select>
             <div className="flex justify-end">
               <Button
                 color="primary"
@@ -221,6 +280,7 @@ export default function AdminParagraphsPage() {
                   createParagraph.mutate({
                     title: title.trim(),
                     text: text.trim(),
+                    category,
                   })
                 }
               >
@@ -296,12 +356,50 @@ export default function AdminParagraphsPage() {
                               value={editingText}
                               onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setEditingText(e.target.value)}
                             />
+                            <Select
+                              className="mt-3 max-w-xs"
+                              label="Difficulty"
+                              size="sm"
+                              labelPlacement="outside"
+                              selectedKeys={[editingCategory]}
+                              onSelectionChange={(keys: Iterable<string>) => {
+                                const key = Array.from(keys)[0];
+                                if (key)
+                                  setEditingCategory(parseParagraphCategory(key));
+                              }}
+                            >
+                              {PARAGRAPH_CATEGORY_IDS.map((id) => (
+                                <SelectItem
+                                  key={id}
+                                  textValue={PARAGRAPH_CATEGORY_LABELS[id]}
+                                >
+                                  {PARAGRAPH_CATEGORY_LABELS[id]}
+                                </SelectItem>
+                              ))}
+                            </Select>
                           </>
                         ) : (
                           <>
-                            <p className="text-sm font-semibold text-foreground mb-1">
-                              {p.title}
-                            </p>
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <p className="text-sm font-semibold text-foreground">
+                                {p.title}
+                              </p>
+                              <Chip
+                                size="sm"
+                                variant="flat"
+                                color={
+                                  PARAGRAPH_CATEGORY_CHIP_COLOR[
+                                    parseParagraphCategory(p.category)
+                                  ]
+                                }
+                              >
+                                {
+                                  PARAGRAPH_CATEGORY_LABELS[
+                                    parseParagraphCategory(p.category)
+                                  ]
+                                }
+                              </Chip>
+                            </div>
                             <p className="text-xs text-default-400 mb-2">
                               {new Date(p.createdAt).toLocaleString()}
                             </p>
@@ -330,6 +428,7 @@ export default function AdminParagraphsPage() {
                                 setEditingId(null);
                                 setEditingTitle("");
                                 setEditingText("");
+                                setEditingCategory("easy");
                               }}
                               isDisabled={updateParagraph.isPending}
                             >
@@ -348,6 +447,7 @@ export default function AdminParagraphsPage() {
                                   id: p.id,
                                   title: editingTitle.trim(),
                                   text: editingText.trim(),
+                                  category: editingCategory,
                                 })
                               }
                             >
@@ -365,6 +465,7 @@ export default function AdminParagraphsPage() {
                                 setEditingId(p.id);
                                 setEditingTitle(p.title);
                                 setEditingText(p.text);
+                                setEditingCategory(parseParagraphCategory(p.category));
                               }}
                             >
                               <EditIcon size={18} />
@@ -428,8 +529,27 @@ export default function AdminParagraphsPage() {
                 backdrop="blur"
               >
                 <ModalContent>
-                  <ModalHeader className="flex flex-col gap-1">
-                    {viewParagraph?.title}
+                  <ModalHeader className="flex flex-col gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span>{viewParagraph?.title}</span>
+                      {viewParagraph && (
+                        <Chip
+                          size="sm"
+                          variant="flat"
+                          color={
+                            PARAGRAPH_CATEGORY_CHIP_COLOR[
+                              parseParagraphCategory(viewParagraph.category)
+                            ]
+                          }
+                        >
+                          {
+                            PARAGRAPH_CATEGORY_LABELS[
+                              parseParagraphCategory(viewParagraph.category)
+                            ]
+                          }
+                        </Chip>
+                      )}
+                    </div>
                     <span className="text-xs font-normal text-default-400">
                       {viewParagraph
                         ? new Date(viewParagraph.createdAt).toLocaleString()

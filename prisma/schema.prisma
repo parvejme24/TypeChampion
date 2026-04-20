@@ -24,6 +24,10 @@ model Score {
   userEmail       String?
   userName        String
   wpm             Int
+  /// Gross WPM (all keystrokes / 5 / minute), independent of accuracy
+  rawWpm          Int       @default(0)
+  /// 0–100: stability of live WPM across seconds (higher = steadier pace)
+  consistency     Float     @default(0)
   accuracy        Float
   correctChars    Int
   wrongChars      Int
@@ -43,6 +47,8 @@ model Paragraph {
   id             Int      @id @default(autoincrement())
   title          String
   text           String   @db.Text
+  /// Difficulty tier shown in admin and typing test: easy | medium | hard | expert
+  category       String   @default("medium")
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
   createdByEmail String?

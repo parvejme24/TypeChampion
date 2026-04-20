@@ -111,8 +111,12 @@ export function PracticeListContent() {
                     <li key={p.id} className="flex flex-wrap gap-4">
                       <span>
                         {new Date(p.createdAt).toLocaleString()} — WPM:{" "}
-                        <strong className="text-foreground">{p.wpm}</strong>, Accuracy:{" "}
-                        <strong className="text-foreground">{p.accuracy}%</strong>
+                        <strong className="text-foreground">{p.wpm}</strong>, Raw:{" "}
+                        <strong className="text-foreground">{p.rawWpm}</strong>, Accuracy:{" "}
+                        <strong className="text-foreground">{p.accuracy}%</strong>, Consistency:{" "}
+                        <strong className="text-foreground">
+                          {Math.round(p.consistency)}%
+                        </strong>
                         {p.durationSeconds != null && (
                           <> ({p.durationSeconds / 60} min)</>
                         )}

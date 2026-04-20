@@ -82,6 +82,15 @@ export function CertificateView({
   const durationMin = stats.durationSeconds
     ? (stats.durationSeconds / 60).toFixed(1)
     : "—";
+  const testDateLabel = stats.completedAt
+    ? new Date(stats.completedAt).toLocaleString(undefined, {
+        dateStyle: "long",
+        timeStyle: "short",
+      })
+    : new Date().toLocaleString(undefined, {
+        dateStyle: "long",
+        timeStyle: "short",
+      });
 
   return (
     <div className="flex flex-col items-center w-full">
@@ -124,20 +133,32 @@ export function CertificateView({
             </div>
           )}
 
-          <div className="flex gap-8 mb-4 flex-wrap">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
             <div>
               <p className="text-gray-500 text-xs">WPM</p>
               <p className="text-2xl font-bold">{stats.wpm}</p>
+            </div>
+            <div>
+              <p className="text-gray-500 text-xs">Raw WPM</p>
+              <p className="text-2xl font-bold">{stats.rawWpm}</p>
             </div>
             <div>
               <p className="text-gray-500 text-xs">Accuracy</p>
               <p className="text-2xl font-bold">{stats.accuracy}%</p>
             </div>
             <div>
+              <p className="text-gray-500 text-xs">Consistency</p>
+              <p className="text-2xl font-bold">{Math.round(stats.consistency)}%</p>
+            </div>
+            <div>
               <p className="text-gray-500 text-xs">Duration</p>
               <p className="text-xl font-semibold">{durationMin} min</p>
             </div>
             <div>
+              <p className="text-gray-500 text-xs">Test date</p>
+              <p className="text-sm font-semibold leading-snug">{testDateLabel}</p>
+            </div>
+            <div className="col-span-2 sm:col-span-3">
               <p className="text-gray-500 text-xs">Correct / Wrong / Total</p>
               <p className="text-lg font-semibold">
                 {stats.correctChars} / {stats.wrongChars} / {stats.totalChars} chars
@@ -156,7 +177,7 @@ export function CertificateView({
           </div>
 
           <footer className="mt-auto pt-8 border-t border-gray-200 text-center text-xs text-gray-500">
-            {APP_NAME} — {new Date().toLocaleDateString()}
+            {APP_NAME} — issued {new Date().toLocaleDateString()}
           </footer>
         </div>
       </div>

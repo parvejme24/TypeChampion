@@ -49,10 +49,13 @@ function groupByParagraph(entries: PracticeEntry[]) {
 function entryToStats(p: PracticeEntry): TypingStats {
   return {
     wpm: p.wpm,
+    rawWpm: p.rawWpm,
+    consistency: p.consistency,
     accuracy: p.accuracy,
     correctChars: p.correctChars,
     wrongChars: p.wrongChars,
     totalChars: p.totalChars,
+    completedAt: p.createdAt,
     durationSeconds: p.durationSeconds,
     paragraphId: p.paragraphId,
     paragraphTitle: p.paragraphTitle ?? undefined,
@@ -152,9 +155,15 @@ export function MyTypedListContent() {
                       <span className="text-sm text-default-600">
                         {new Date(p.createdAt).toLocaleString()} — WPM:{" "}
                         <strong className="text-foreground">{p.wpm}</strong>,
+                        Raw:{" "}
+                        <strong className="text-foreground">{p.rawWpm}</strong>,
                         Accuracy:{" "}
                         <strong className="text-foreground">
                           {p.accuracy}%
+                        </strong>
+                        , Consistency:{" "}
+                        <strong className="text-foreground">
+                          {Math.round(p.consistency)}%
                         </strong>
                         {p.durationSeconds != null && (
                           <span className="text-default-500">

@@ -5,6 +5,8 @@ export interface DbScore {
   userEmail: string | null;
   userName: string;
   wpm: number;
+  rawWpm: number;
+  consistency: number;
   accuracy: number;
   correctChars: number;
   wrongChars: number;
@@ -20,6 +22,8 @@ export interface DbScore {
 export async function addScore(
   input: {
     wpm: number;
+    rawWpm: number;
+    consistency: number;
     accuracy: number;
     correctChars: number;
     wrongChars: number;
@@ -38,6 +42,8 @@ export async function addScore(
       userEmail,
       userName: userName || userEmail,
       wpm: input.wpm,
+      rawWpm: input.rawWpm,
+      consistency: input.consistency,
       accuracy: input.accuracy,
       correctChars: input.correctChars,
       wrongChars: input.wrongChars,
@@ -55,6 +61,8 @@ export async function addScore(
     userEmail: score.userEmail,
     userName: score.userName,
     wpm: score.wpm,
+    rawWpm: score.rawWpm,
+    consistency: score.consistency,
     accuracy: score.accuracy,
     correctChars: score.correctChars,
     wrongChars: score.wrongChars,
@@ -130,6 +138,8 @@ export async function getLeaderboard(
           userEmail: best.userEmail,
           userName: best.userName,
           wpm: best.wpm,
+          rawWpm: best.rawWpm,
+          consistency: best.consistency,
           accuracy: best.accuracy,
           correctChars: best.correctChars,
           wrongChars: best.wrongChars,
@@ -153,6 +163,8 @@ export async function getScoresByUserEmail(userEmail: string): Promise<DbScore[]
     userEmail: s.userEmail,
     userName: s.userName,
     wpm: s.wpm,
+    rawWpm: s.rawWpm,
+    consistency: s.consistency,
     accuracy: s.accuracy,
     correctChars: s.correctChars,
     wrongChars: s.wrongChars,

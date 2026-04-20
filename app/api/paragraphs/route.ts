@@ -4,6 +4,8 @@ import { isAdmin } from "@/lib/auth-helpers";
 import { getServerSession } from "next-auth/next";
 import type { Session } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
+import { parseParagraphCategory } from "@/lib/paragraph-categories";
+import { toIsoString } from "@/lib/to-iso-string";
 
 export async function GET() {
   try {
@@ -13,8 +15,12 @@ export async function GET() {
         id: p.id.toString(),
         title: p.title,
         text: p.text,
-        createdAt: p.createdAt.toISOString(),
-      }))
+        category: p.category,
+        createdAt: toIsoString(p.createdAt),
+      })),
+      {
+        headers: { "Cache-Control": "no-store, must-revalidate" },
+      },
     );
   } catch (err) {
     console.error("[API paragraphs GET]", err);
@@ -37,6 +43,7 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}));
     const title = typeof body.title === "string" ? body.title.trim() : "";
     const text = typeof body.text === "string" ? body.text.trim() : "";
+    const category = parseParagraphCategory(body.category);
     if (!title || !text) {
       return NextResponse.json(
         { error: "Title and text are required" },
@@ -46,14 +53,19 @@ export async function POST(req: Request) {
     const paragraph = await createParagraph({
       title,
       text,
+      category,
       createdByEmail: session?.user?.email ?? undefined,
     });
-    return NextResponse.json({
-      id: paragraph.id.toString(),
-      title: paragraph.title,
-      text: paragraph.text,
-      createdAt: paragraph.createdAt.toISOString(),
-    });
+    return NextResponse.json(
+      {
+        id: paragraph.id.toString(),
+        title: paragraph.title,
+        text: paragraph.text,
+        category: paragraph.category,
+        createdAt: toIsoString(paragraph.createdAt),
+      },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (err) {
     console.error("[API paragraphs POST]", err);
     return NextResponse.json(

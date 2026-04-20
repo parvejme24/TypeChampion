@@ -31,6 +31,14 @@ function formatDurationLabel(seconds: number) {
     : `${minutes.toFixed(1)} min`;
 }
 
+function formatCompletedAt(iso?: string) {
+  if (!iso) return null;
+  return new Date(iso).toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
 export function ResultModal({
   isOpen,
   onClose,
@@ -44,10 +52,11 @@ export function ResultModal({
   const [saved, setSaved] = useState(false);
   const [showCertificate, setShowCertificate] = useState(false);
 
-  // Auto-save when logged in and modal opens
+  // Auto-save when logged in and modal opens (each new `stats` triggers a fresh save)
   useEffect(() => {
-    if (!isOpen || !isLoggedIn || !stats || !onSaveScore || saved || saving) return;
+    if (!isOpen || !isLoggedIn || !stats || !onSaveScore) return;
     let cancelled = false;
+    setSaved(false);
     setSaving(true);
     onSaveScore(stats)
       .then(() => {
@@ -65,10 +74,11 @@ export function ResultModal({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, isLoggedIn, stats, onSaveScore, saved, saving]);
+  }, [isOpen, isLoggedIn, stats, onSaveScore]);
 
   if (!stats) return null;
 
+  const completedLabel = formatCompletedAt(stats.completedAt);
   const displayName = userName?.trim() || "User";
   const displayEmail = userEmail?.trim() || "";
 
@@ -120,14 +130,47 @@ export function ResultModal({
           </p>
         </ModalHeader>
         <ModalBody className="gap-6">
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[120px] p-5 rounded-xl bg-primary-50 dark:bg-primary-500/15 border border-primary-200 dark:border-primary-500/30">
-              <p className="text-xs font-medium text-default-500 uppercase tracking-wider">WPM</p>
-              <p className="text-3xl font-bold text-primary mt-1">{stats.wpm}</p>
+          {completedLabel && (
+            <p className="text-sm text-default-500">
+              Completed{" "}
+              <span className="font-medium text-foreground">{completedLabel}</span>
+            </p>
+          )}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="p-4 rounded-xl bg-primary-50 dark:bg-primary-500/15 border border-primary-200 dark:border-primary-500/30">
+              <p className="text-[10px] font-semibold text-default-500 uppercase tracking-wider">
+                WPM
+              </p>
+              <p className="text-2xl sm:text-3xl font-bold text-primary mt-1 tabular-nums">
+                {stats.wpm}
+              </p>
             </div>
-            <div className="flex-1 min-w-[120px] p-5 rounded-xl bg-default-100 dark:bg-default-50/50 border border-default-200">
-              <p className="text-xs font-medium text-default-500 uppercase tracking-wider">Accuracy</p>
-              <p className="text-3xl font-bold text-foreground mt-1">{stats.accuracy}%</p>
+            <div className="p-4 rounded-xl bg-default-100 dark:bg-default-50/50 border border-default-200">
+              <p className="text-[10px] font-semibold text-default-500 uppercase tracking-wider">
+                Raw
+              </p>
+              <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1 tabular-nums">
+                {stats.rawWpm}
+              </p>
+            </div>
+            <div className="p-4 rounded-xl bg-default-100 dark:bg-default-50/50 border border-default-200">
+              <p className="text-[10px] font-semibold text-default-500 uppercase tracking-wider">
+                Accuracy
+              </p>
+              <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1 tabular-nums">
+                {stats.accuracy}%
+              </p>
+            </div>
+            <div className="p-4 rounded-xl bg-default-100 dark:bg-default-50/50 border border-default-200 sm:col-span-2">
+              <p className="text-[10px] font-semibold text-default-500 uppercase tracking-wider">
+                Consistency
+              </p>
+              <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1 tabular-nums">
+                {Math.round(stats.consistency)}%
+              </p>
+              <p className="text-xs text-default-500 mt-1">
+                How steady your pace was across the test window
+              </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-6 text-sm text-default-600">
